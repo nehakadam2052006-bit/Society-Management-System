@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Vehicle Directory - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Vehicle Management</h3>
+        <p class="text-muted small mb-0">Track authorised resident vehicles, parking slots, and gate permits.</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addVehicleModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Vehicle
+    </button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <span class="fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>Registered Vehicles ({{ vehicles|length }})</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Vehicle Number</th>
+                        <th>Type</th>
+                        <th>Owner Name</th>
+                        <th>Allocated Flat</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in vehicles %}
+                    <tr>
+                        <td class="font-monospace fw-bold text-dark fs-6">{{ v.vehicle_number }}</td>
+                        <td>
+                            {% if v.vehicle_type == 'Car' %}
+                                <span class="badge bg-primary-subtle text-primary"><i class="bi bi-car-front me-1"></i>Car</span>
+                            {% elif v.vehicle_type == 'Bike' %}
+                                <span class="badge bg-success-subtle text-success"><i class="bi bi-bicycle me-1"></i>Bike</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary">{{ v.vehicle_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ v.owner_name }}</td>
+                        <td><span class="badge bg-light text-dark border font-monospace">{{ v.flat_number }}</span></td>
+                        <td class="text-end">
+                            <form method="POST" action="{{ url_for('delete_vehicle', vehicle_id=v.id) }}" class="d-inline" onsubmit="return confirm('Remove vehicle record {{ v.vehicle_number }}?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No vehicles registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Vehicle Modal -->
+<div class="modal fade" id="addVehicleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-car-front text-primary me-2"></i>Register Vehicle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_vehicle') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Assign to Flat</label>
+                        <select name="flat_id" class="form-select" required>
+                            {% for f in flats %}
+                                <option value="{{ f.id }}">{{ f.flat_number }} ({{ f.resident_name or f.owner_name }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vehicle Number</label>
+                        <input type="text" name="vehicle_number" class="form-control" placeholder="e.g. MH-02-AB-1234" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Vehicle Type</label>
+                        <select name="vehicle_type" class="form-select">
+                            <option value="Car">Car</option>
+                            <option value="Bike">Bike / Motorcycle</option>
+                            <option value="Scooter">Scooter</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Owner Name</label>
+                        <input type="text" name="owner_name" class="form-control" placeholder="Full name of vehicle owner" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Register Vehicle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

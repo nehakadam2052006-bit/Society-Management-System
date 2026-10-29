@@ -1,0 +1,43 @@
+@app.route('/admin/maintenance')
+@login_required(role='admin')
+def admin_maintenance():
+    bills = query_db("""
+        SELECT m.id, m.month_year, m.amount, m.status, m.due_date,
+               f.flat_number, f.block, u.full_name as resident_name,
+               r.id as resident_id
+        FROM maintenance m
+        JOIN flats f ON m.flat_id = f.id
+        LEFT JOIN residents r ON f.id = r.flat_id
+        LEFT JOIN users u ON r.user_id = u.id
+        ORDER BY m.id DESC
+    """)
+    return render_template('maintenance.html', bills=bills)
+
+@app.route('/admin/maintenance/generate', methods=['POST'])
+@login_required(role='admin')
+def generate_maintenance():
+    month_year = request.form.get('month_year', '').strip()
+    due_date = request.form.get('due_date', '').strip()
+    
+    occupied_flats = query_db(
+        "SELECT id, maint_amount FROM flats WHERE status = 'occupied'"
+    )
+    generated_count = 0
+    for flat in occupied_flats:
+        exists = query_db("""
+            SELECT id FROM maintenance WHERE flat_id = ? AND month_year = ?
+        """, (flat['id'], month_year), one=True)
+        if not exists:
+            execute_db("""
+                INSERT INTO maintenance (flat_id, month_year, amount,
+                                         status, due_date)
+                VALUES (?, ?, ?, 'unpaid', ?)
+            """, (flat['id'], month_year, flat['maint_amount'], due_date))
+            generated_count += 1
+            
+    flash(
+        f"Generated {generated_count} maintenance "
+        f"assessments for {month_year}.",
+        "success"
+    )
+    return redirect(url_for('admin_maintenance'))

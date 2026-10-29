@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Administrative Overview</h3>
+        <p class="text-muted small mb-0">Welcome back, {{ session.get('full_name') }}. Here is the live status of your housing society.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('maintenance') }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i> Generate Bill
+        </a>
+        <a href="{{ url_for('notices') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-megaphone me-1"></i> Post Notice
+        </a>
+    </div>
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-semibold text-uppercase">Total Flats</span>
+                    <h3 class="fw-bold text-dark my-1">{{ stats.total_flats }}</h3>
+                    <div class="small text-muted">
+                        <span class="text-success fw-bold">{{ stats.occupied_flats }} Occupied</span> &bull; 
+                        <span class="text-secondary">{{ stats.vacant_flats }} Vacant</span>
+                    </div>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-building"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-semibold text-uppercase">Total Residents</span>
+                    <h3 class="fw-bold text-dark my-1">{{ stats.total_residents }}</h3>
+                    <div class="small text-muted">Registered Members</div>
+                </div>
+                <div class="stat-icon bg-success-subtle text-success">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-semibold text-uppercase">Maintenance Dues</span>
+                    <h3 class="fw-bold text-danger my-1">₹{{ "{:,.0f}".format(stats.pending_dues) }}</h3>
+                    <div class="small text-muted">
+                        <span class="text-success fw-semibold">₹{{ "{:,.0f}".format(stats.paid_amount) }} collected</span>
+                    </div>
+                </div>
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-cash-coin"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-secondary small fw-semibold text-uppercase">Active Issues</span>
+                    <h3 class="fw-bold text-dark my-1">{{ stats.open_complaints }}</h3>
+                    <div class="small text-muted">
+                        <span class="text-warning fw-semibold">{{ stats.visitors_inside }} Visitors in premises</span>
+                    </div>
+                </div>
+                <div class="stat-icon bg-danger-subtle text-danger">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Complaints Table -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark"><i class="bi bi-tools text-primary me-2"></i>Recent Complaints</span>
+                <a href="{{ url_for('complaints') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Flat</th>
+                                <th>Category</th>
+                                <th>Issue Title</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in recent_complaints %}
+                            <tr>
+                                <td class="fw-bold">{{ c.flat_number }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ c.category }}</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark text-truncate" style="max-width: 200px;">{{ c.title }}</div>
+                                    <small class="text-muted">{{ c.resident_name }}</small>
+                                </td>
+                                <td>
+                                    {% if c.status == 'OPEN' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">OPEN</span>
+                                    {% elif c.status == 'IN PROGRESS' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle">IN PROGRESS</span>
+                                    {% else %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">RESOLVED</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No recent complaints.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Visitors Currently Inside -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark"><i class="bi bi-shield-check text-success me-2"></i>Visitors Currently Inside</span>
+                <span class="badge bg-success-subtle text-success">{{ active_visitors|length }} Active</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Visitor</th>
+                                <th>Visiting Flat</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for v in active_visitors %}
+                            <tr>
+                                <td>
+                                    <div class="fw-semibold">{{ v.visitor_name }}</div>
+                                    <small class="text-muted">{{ v.purpose }} &bull; {{ v.phone }}</small>
+                                </td>
+                                <td class="fw-bold">{{ v.flat_number }}</td>
+                                <td>
+                                    <form method="POST" action="{{ url_for('visitor_exit', visitor_id=v.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">Exit</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No visitors currently inside.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Maintenance Payments -->
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-bold text-dark"><i class="bi bi-cash-stack text-success me-2"></i>Recent Maintenance Payments</span>
+        <a href="{{ url_for('maintenance') }}" class="btn btn-sm btn-link text-decoration-none">View All Bills</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Receipt No</th>
+                        <th>Flat</th>
+                        <th>Month</th>
+                        <th>Amount Paid</th>
+                        <th>Mode</th>
+                        <th>Date & Time</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in recent_payments %}
+                    <tr>
+                        <td><span class="font-monospace text-primary fw-semibold">{{ p.receipt_no }}</span></td>
+                        <td class="fw-bold">{{ p.flat_number }}</td>
+                        <td>{{ p.month_year }}</td>
+                        <td class="fw-bold text-success">₹{{ "{:,.2f}".format(p.amount_paid) }}</td>
+                        <td><span class="badge bg-light text-dark border">{{ p.payment_mode }}</span></td>
+                        <td class="small text-muted">{{ p.payment_date }}</td>
+                        <td>
+                            <a href="{{ url_for('view_receipt', payment_id=p.id) }}" class="btn btn-sm btn-outline-primary py-0 px-2" target="_blank">
+                                <i class="bi bi-printer"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">No payment records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

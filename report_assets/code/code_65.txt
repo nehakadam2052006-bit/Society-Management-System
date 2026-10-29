@@ -1,0 +1,55 @@
+@app.route('/admin/dashboard')
+@login_required(role='admin')
+def admin_dashboard():
+    total_flats = query_db(
+        "SELECT COUNT(*) as count FROM flats", one=True
+    )['count']
+    occupied_flats = query_db(
+        "SELECT COUNT(*) as count FROM flats WHERE status = 'occupied'",
+        one=True
+    )['count']
+    vacant_flats = total_flats - occupied_flats
+    total_residents = query_db(
+        "SELECT COUNT(*) as count FROM residents", one=True
+    )['count']
+    
+    total_maint = query_db(
+        "SELECT COALESCE(SUM(amount), 0) as total FROM maintenance",
+        one=True
+    )['total']
+    collected_maint = query_db(
+        "SELECT COALESCE(SUM(amount), 0) as total FROM payments",
+        one=True
+    )['total']
+    pending_maint = total_maint - collected_maint
+    
+    pending_complaints = query_db(
+        "SELECT COUNT(*) as count FROM complaints WHERE status != 'Resolved'",
+        one=True
+    )['count']
+    active_visitors = query_db(
+        "SELECT COUNT(*) as count FROM visitors WHERE check_out IS NULL",
+        one=True
+    )['count']
+    
+    recent_payments = query_db("""
+        SELECT p.id, p.amount, p.payment_date, p.payment_mode,
+               f.flat_number, u.full_name
+        FROM payments p
+        JOIN maintenance m ON p.maint_id = m.id
+        JOIN flats f ON m.flat_id = f.id
+        JOIN residents r ON p.paid_by = r.id
+        JOIN users u ON r.user_id = u.id
+        ORDER BY p.payment_date DESC LIMIT 5
+    """)
+    
+    return render_template(
+        'admin_dashboard.html',
+        total_flats=total_flats, occupied_flats=occupied_flats,
+        vacant_flats=vacant_flats, total_residents=total_residents,
+        total_maint=total_maint, collected_maint=collected_maint,
+        pending_maint=pending_maint,
+        pending_complaints=pending_complaints,
+        active_visitors=active_visitors,
+        recent_payments=recent_payments
+    )

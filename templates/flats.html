@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Flats Management - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Flats Management</h3>
+        <p class="text-muted small mb-0">Manage residential apartments, ownership details, and occupancy records.</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addFlatModal">
+        <i class="bi bi-plus-lg me-1"></i> Add New Flat
+    </button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white py-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <span class="fw-bold text-dark"><i class="bi bi-door-open-fill text-primary me-2"></i>All Registered Flats ({{ flats|length }})</span>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 me-2">
+                    Occupied: {{ flats|selectattr('status', 'equalto', 'Occupied')|list|length }}
+                </span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1">
+                    Vacant: {{ flats|selectattr('status', 'equalto', 'Vacant')|list|length }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Flat No</th>
+                        <th>Wing</th>
+                        <th>Floor</th>
+                        <th>Type</th>
+                        <th>Owner Details</th>
+                        <th>Current Resident</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in flats %}
+                    <tr>
+                        <td class="fw-bold text-primary font-monospace">{{ f.flat_number }}</td>
+                        <td><span class="badge bg-light text-dark border">Wing {{ f.wing }}</span></td>
+                        <td>{{ f.floor }}</td>
+                        <td>{{ f.flat_type }}</td>
+                        <td>
+                            <div class="fw-semibold">{{ f.owner_name }}</div>
+                            <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ f.owner_phone }}</small>
+                        </td>
+                        <td>
+                            {% if f.resident_name %}
+                                <div class="fw-semibold text-dark">{{ f.resident_name }}</div>
+                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ f.resident_phone }}</small>
+                            {% else %}
+                                <span class="text-muted fst-italic">None</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if f.status == 'Occupied' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">Occupied</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Vacant</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editFlatModal{{ f.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('delete_flat', flat_id=f.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete flat {{ f.flat_number }}?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Flat Modal -->
+                    <div class="modal fade" id="editFlatModal{{ f.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold">Edit Flat {{ f.flat_number }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('edit_flat', flat_id=f.id) }}">
+                                    <div class="modal-body">
+                                        <div class="row g-2 mb-3">
+                                            <div class="col-4">
+                                                <label class="form-label small fw-semibold">Wing</label>
+                                                <input type="text" name="wing" class="form-control" value="{{ f.wing }}" required>
+                                            </div>
+                                            <div class="col-4">
+                                                <label class="form-label small fw-semibold">Floor</label>
+                                                <input type="number" name="floor" class="form-control" value="{{ f.floor }}" required>
+                                            </div>
+                                            <div class="col-4">
+                                                <label class="form-label small fw-semibold">Type</label>
+                                                <select name="flat_type" class="form-select">
+                                                    <option value="1BHK" {% if f.flat_type == '1BHK' %}selected{% endif %}>1BHK</option>
+                                                    <option value="2BHK" {% if f.flat_type == '2BHK' %}selected{% endif %}>2BHK</option>
+                                                    <option value="3BHK" {% if f.flat_type == '3BHK' %}selected{% endif %}>3BHK</option>
+                                                    <option value="4BHK" {% if f.flat_type == '4BHK' %}selected{% endif %}>4BHK</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Owner Name</label>
+                                            <input type="text" name="owner_name" class="form-control" value="{{ f.owner_name }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Owner Phone</label>
+                                            <input type="text" name="owner_phone" class="form-control" value="{{ f.owner_phone }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Current Resident Name (if rented/occupied)</label>
+                                            <input type="text" name="resident_name" class="form-control" value="{{ f.resident_name or '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Current Resident Phone</label>
+                                            <input type="text" name="resident_phone" class="form-control" value="{{ f.resident_phone or '' }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-semibold">Status</label>
+                                            <select name="status" class="form-select">
+                                                <option value="Occupied" {% if f.status == 'Occupied' %}selected{% endif %}>Occupied</option>
+                                                <option value="Vacant" {% if f.status == 'Vacant' %}selected{% endif %}>Vacant</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">No flats registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Flat Modal -->
+<div class="modal fade" id="addFlatModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle text-primary me-2"></i>Add New Flat</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_flat') }}">
+                <div class="modal-body">
+                    <div class="row g-2 mb-3">
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Flat No</label>
+                            <input type="text" name="flat_number" class="form-control" placeholder="C-301" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Wing</label>
+                            <input type="text" name="wing" class="form-control" placeholder="C" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label small fw-semibold">Floor</label>
+                            <input type="number" name="floor" class="form-control" placeholder="3" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Flat Type</label>
+                        <select name="flat_type" class="form-select">
+                            <option value="1BHK">1BHK</option>
+                            <option value="2BHK" selected>2BHK</option>
+                            <option value="3BHK">3BHK</option>
+                            <option value="4BHK">4BHK</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Owner Name</label>
+                        <input type="text" name="owner_name" class="form-control" placeholder="Full name of owner" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Owner Mobile</label>
+                        <input type="text" name="owner_phone" class="form-control" placeholder="10 digit mobile" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Initial Status</label>
+                        <select name="status" class="form-select">
+                            <option value="Vacant">Vacant</option>
+                            <option value="Occupied">Occupied</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Flat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

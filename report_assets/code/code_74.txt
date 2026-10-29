@@ -1,0 +1,46 @@
+@app.route('/admin/export/<report_type>')
+@login_required(role='admin')
+def export_csv(report_type):
+    import io, csv
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    if report_type == 'maintenance':
+        writer.writerow([
+            'Bill ID', 'Flat Number', 'Month-Year',
+            'Amount', 'Status', 'Due Date'
+        ])
+        rows = query_db("""
+            SELECT m.id, f.flat_number, m.month_year, m.amount,
+                   m.status, m.due_date
+            FROM maintenance m JOIN flats f ON m.flat_id = f.id
+        """)
+        for r in rows:
+            writer.writerow([
+                r['id'], r['flat_number'], r['month_year'],
+                r['amount'], r['status'], r['due_date']
+            ])
+        filename = f"maintenance_audit_{datetime.now().strftime('%Y%m%d')}.csv"
+        
+    elif report_type == 'visitors':
+        writer.writerow([
+            'Pass ID', 'Visitor Name', 'Phone',
+            'Destination Flat', 'Purpose', 'Check-In', 'Check-Out'
+        ])
+        rows = query_db("""
+            SELECT v.id, v.visitor_name, v.phone, f.flat_number,
+                   v.purpose, v.check_in, v.check_out
+            FROM visitors v JOIN flats f ON v.flat_id = f.id
+        """)
+        for r in rows:
+            writer.writerow([
+                r['id'], r['visitor_name'], r['phone'],
+                r['flat_number'], r['purpose'], r['check_in'], r['check_out']
+            ])
+        date_str = datetime.now().strftime('%Y%m%d')
+        filename = f"visitor_security_log_{date_str}.csv"
+        
+    response = make_response(output.getvalue())
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    response.headers["Content-type"] = "text/csv"
+    return response

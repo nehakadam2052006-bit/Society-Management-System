@@ -1,0 +1,52 @@
+import os
+from functools import wraps
+from datetime import datetime
+from flask import (
+    Flask, render_template, request, redirect, url_for, flash,
+    session, make_response
+)
+from werkzeug.security import generate_password_hash, check_password_hash
+from db import get_db, query_db, execute_db
+
+app = Flask(__name__)
+app.secret_key = os.environ.get(
+    'SECRET_KEY', 'central-park-society-secret-key-2026'
+)
+
+def login_required(role=None):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if 'user_id' not in session:
+                flash("Please log in to access this page.", "warning")
+                return redirect(url_for('login'))
+            if role and session.get('role') != role:
+                flash("Access denied: You do not have permissions "
+                      "for this section.", "danger")
+                return redirect(url_for('login'))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
+        user = query_db(
+            "SELECT * FROM users WHERE username = ?", (username,), one=True
+        )
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['role'] = user['role']
+            session['full_name'] = user['full_name']
+            flash(f"Welcome back, {user['full_name']}!", "success")
+            if user['role'] == 'admin':
+                return redirect(url_for('admin_dashboard'))
+            elif user['role'] == 'resident':
+                return redirect(url_for('resident_dashboard'))
+            elif user['role'] == 'security':
+                return redirect(url_for('security_dashboard'))
+        flash("Invalid username or password.", "danger")
+    return render_template('login.html')

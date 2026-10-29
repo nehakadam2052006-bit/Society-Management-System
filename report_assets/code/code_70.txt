@@ -1,0 +1,48 @@
+@app.route('/admin/complaints')
+@login_required(role='admin')
+def admin_complaints():
+    complaints = query_db("""
+        SELECT c.*, f.flat_number, u.full_name as resident_name, r.phone
+        FROM complaints c
+        JOIN residents r ON c.resident_id = r.id
+        JOIN users u ON r.user_id = u.id
+        JOIN flats f ON r.flat_id = f.id
+        ORDER BY CASE c.status
+                     WHEN 'Pending' THEN 1
+                     WHEN 'In Progress' THEN 2
+                     ELSE 3 END,
+                 c.created_at DESC
+    """)
+    return render_template('complaints.html', complaints=complaints)
+
+@app.route('/admin/complaints/update/<int:complaint_id>', methods=['POST'])
+@login_required(role='admin')
+def update_complaint(complaint_id):
+    new_status = request.form.get('status', '').strip()
+    execute_db("""
+        UPDATE complaints SET status = ? WHERE id = ?
+    """, (new_status, complaint_id))
+    flash(f"Complaint #{complaint_id} updated to '{new_status}'.", "info")
+    return redirect(url_for('admin_complaints'))
+
+@app.route('/resident/complaints/submit', methods=['POST'])
+@login_required(role='resident')
+def resident_submit_complaint():
+    resident = query_db(
+        "SELECT id FROM residents WHERE user_id = ?",
+        (session['user_id'],), one=True
+    )
+    category = request.form.get('category', '').strip()
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    
+    execute_db("""
+        INSERT INTO complaints (resident_id, category, title,
+                                description, status)
+        VALUES (?, ?, ?, ?, 'Pending')
+    """, (resident['id'], category, title, description))
+    flash(
+        "Your service complaint ticket has been submitted to management.",
+        "success"
+    )
+    return redirect(url_for('resident_complaints'))

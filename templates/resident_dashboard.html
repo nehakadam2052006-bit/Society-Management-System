@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Resident Dashboard - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Welcome, {{ session.get('full_name') }}</h3>
+        <p class="text-muted small mb-0">Flat {{ flat.flat_number if flat else 'Unassigned' }} &bull; Central Park Co-operative Housing Society</p>
+    </div>
+    <a href="{{ url_for('resident_complaints') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle me-1"></i> Raise Complaint
+    </a>
+</div>
+
+<!-- Quick Overview Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-door-open-fill"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">My Apartment</span>
+                    <h4 class="fw-bold text-dark my-1">{{ flat.flat_number if flat else 'A-101' }}</h4>
+                    <span class="badge bg-light text-dark border">Wing {{ flat.wing if flat else 'A' }}, Floor {{ flat.floor if flat else '1' }} ({{ flat.flat_type if flat else '2BHK' }})</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon {% if pending_bill %}bg-danger-subtle text-danger{% else %}bg-success-subtle text-success{% endif %}">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Current Maintenance</span>
+                    {% if pending_bill %}
+                        <h4 class="fw-bold text-danger my-1">₹{{ "{:,.2f}".format(pending_bill.total_amount) }}</h4>
+                        <span class="badge bg-danger-subtle text-danger">Pending Due</span>
+                    {% else %}
+                        <h4 class="fw-bold text-success my-1">All Clear</h4>
+                        <span class="badge bg-success-subtle text-success">No Pending Dues</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card p-3 border-0 shadow-sm bg-white h-100">
+            <div class="d-flex align-items-center gap-3">
+                <div class="stat-icon bg-warning-subtle text-warning">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">My Complaints</span>
+                    <h4 class="fw-bold text-dark my-1">{{ my_complaints|length }}</h4>
+                    <span class="small text-muted">{{ my_complaints|selectattr('status', 'equalto', 'OPEN')|list|length }} Open Issues</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Active Notices -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark"><i class="bi bi-megaphone-fill text-primary me-2"></i>Latest Society Notices</span>
+                <a href="{{ url_for('notices') }}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for n in notices %}
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-light text-dark border">{{ n.category or 'General' }}</span>
+                            <small class="text-muted">{{ n.published_date }}</small>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">{{ n.title }}</h6>
+                        <p class="text-secondary small mb-0 text-truncate">{{ n.description }}</p>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted">No notices at this time.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Registered Vehicles -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <span class="fw-bold text-dark"><i class="bi bi-car-front-fill text-primary me-2"></i>My Registered Vehicles</span>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for v in my_vehicles %}
+                    <li class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-bold text-dark font-monospace">{{ v.vehicle_number }}</div>
+                            <small class="text-muted">{{ v.vehicle_type }} &bull; {{ v.owner_name }}</small>
+                        </div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Permitted</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item p-4 text-center text-muted">No vehicles registered for your flat.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

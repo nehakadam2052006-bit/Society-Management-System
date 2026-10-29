@@ -1,0 +1,34 @@
+@app.route('/notices')
+def public_notices():
+    notices = query_db("""
+        SELECT n.*, u.full_name as author
+        FROM notices n
+        JOIN users u ON n.posted_by = u.id
+        ORDER BY CASE n.priority
+                     WHEN 'Urgent' THEN 1
+                     WHEN 'Important' THEN 2
+                     ELSE 3 END,
+                 n.created_at DESC
+    """)
+    return render_template('notices.html', notices=notices)
+
+@app.route('/admin/notices/add', methods=['POST'])
+@login_required(role='admin')
+def add_notice():
+    title = request.form.get('title', '').strip()
+    content = request.form.get('content', '').strip()
+    priority = request.form.get('priority', 'General').strip()
+    
+    execute_db("""
+        INSERT INTO notices (title, content, posted_by, priority)
+        VALUES (?, ?, ?, ?)
+    """, (title, content, session['user_id'], priority))
+    flash("Notice broadcast successfully across society portals.", "success")
+    return redirect(url_for('public_notices'))
+
+@app.route('/admin/notices/delete/<int:notice_id>', methods=['POST'])
+@login_required(role='admin')
+def delete_notice(notice_id):
+    execute_db("DELETE FROM notices WHERE id = ?", (notice_id,))
+    flash("Notice circular removed.", "info")
+    return redirect(url_for('public_notices'))

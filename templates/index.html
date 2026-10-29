@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Society Management System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Header -->
+    <div class="p-4 p-md-5 mb-4 rounded-3 bg-white border shadow-sm">
+        <div class="container-fluid py-2">
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill mb-2">
+                <i class="bi bi-check-circle-fill me-1"></i> Step 1: Project Setup &amp; MySQL
+            </span>
+            <h1 class="display-6 fw-bold text-dark mt-2">Housing Society Management System</h1>
+            <p class="col-md-9 fs-6 text-secondary mb-3">
+                A simple, clean, and local web portal for residential housing societies built with Python Flask, MySQL, and Bootstrap 5.
+            </p>
+        </div>
+    </div>
+
+    <!-- MySQL Connection Status Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-database text-primary"></i>
+                        <span>MySQL Connection Status</span>
+                    </h5>
+                    {% if db_status.connected and db_status.db_exists and db_status.tables|length > 0 %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">
+                            <i class="bi bi-check2-circle me-1"></i> Connected &amp; Ready
+                        </span>
+                    {% elif db_status.connected %}
+                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Server Connected (Database Needs Setup)
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+                            <i class="bi bi-x-circle me-1"></i> Not Connected
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if db_status.connected and db_status.db_exists and db_status.tables|length > 0 %}
+                        <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                            <div>
+                                <strong>Success!</strong> Connected to database <code>{{ db_status.db_name }}</code> on <code>{{ db_status.host }}</code> with user <code>{{ db_status.user }}</code>.
+                            </div>
+                        </div>
+
+                        <h6 class="text-uppercase text-muted fw-bold small mb-2">Detected Tables ({{ db_status.tables|length }})</h6>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            {% for table in db_status.tables %}
+                                <span class="badge bg-light text-dark border px-3 py-2 font-monospace">
+                                    <i class="bi bi-table text-primary me-1"></i> {{ table }}
+                                </span>
+                            {% endfor %}
+                        </div>
+
+                    {% elif db_status.connected and not db_status.db_exists %}
+                        <div class="alert alert-warning mb-3">
+                            <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle me-1"></i> Connected to MySQL, but database '{{ db_status.db_name }}' not found!</h6>
+                            <p class="mb-0">Run the initialization script in your terminal to create the database and tables:</p>
+                            <pre class="bg-dark text-white p-2 rounded mt-2 mb-0"><code>python init_db.py</code></pre>
+                        </div>
+
+                    {% elif db_status.connected and db_status.tables|length == 0 %}
+                        <div class="alert alert-warning mb-3">
+                            <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle me-1"></i> Database '{{ db_status.db_name }}' exists, but has no tables yet.</h6>
+                            <p class="mb-0">Run this command to create all tables from <code>database/schema.sql</code>:</p>
+                            <pre class="bg-dark text-white p-2 rounded mt-2 mb-0"><code>python init_db.py</code></pre>
+                        </div>
+
+                    {% else %}
+                        <div class="alert alert-danger mb-3">
+                            <h6 class="alert-heading fw-bold"><i class="bi bi-exclamation-octagon me-1"></i> MySQL Connection Failed</h6>
+                            <p class="mb-1"><strong>Error details:</strong> {{ db_status.error }}</p>
+                            <hr>
+                            <p class="mb-1"><strong>How to resolve:</strong></p>
+                            <ol class="mb-0 ps-3">
+                                <li>Make sure your MySQL server is running locally (e.g. run <code>brew services start mysql</code> or start XAMPP/MySQL service).</li>
+                                <li>Open <code>config.py</code> and check your MySQL username and password (default is user: <code>root</code>, password: <code>''</code>).</li>
+                                <li>Run <code>python init_db.py</code> once MySQL is running.</li>
+                            </ol>
+                        </div>
+                    {% endif %}
+
+                    <div class="text-muted small">
+                        <span>Host: <code>{{ db_status.host }}</code></span> &bull;
+                        <span>Port: <code>{{ config.MYSQL_PORT }}</code></span> &bull;
+                        <span>User: <code>{{ db_status.user }}</code></span> &bull;
+                        <span>Database: <code>{{ db_status.db_name }}</code></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3 User Roles Cards -->
+    <h5 class="fw-bold mb-3"><i class="bi bi-people-fill text-primary me-2"></i>User Types in System</h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="feature-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">1. Admin</h6>
+                        <p class="text-muted small mb-0">Manages flats, residents, maintenance, complaints, notices, &amp; reports.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="feature-icon bg-success-subtle text-success">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">2. Resident</h6>
+                        <p class="text-muted small mb-0">Views flat info, maintenance bills, payment history, and submits complaints.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 p-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="feature-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">3. Security</h6>
+                        <p class="text-muted small mb-0">Logs visitor entry and exit times, visitor vehicle number, and flat destination.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Development Roadmap -->
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-list-check text-primary"></i>
+                <span>Development Order Tracker</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-success-subtle text-success d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span class="small fw-semibold">Step 1: Project Setup &amp; DB Connection</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-arrow-right-circle-fill"></i>
+                        <span class="small fw-semibold">Step 2: Login System (Next)</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 3: Admin Dashboard</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 4: Flat Management</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 5: Resident Management</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 6: Maintenance &amp; Payments</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 7: Complaints</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 8: Visitor Management</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 9: Notices</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 10: Vehicles</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 11: Basic Reports</span>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-4">
+                    <div class="p-2 border rounded bg-light text-muted d-flex align-items-center gap-2">
+                        <i class="bi bi-circle"></i>
+                        <span class="small">Step 12: Final Testing &amp; UI</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

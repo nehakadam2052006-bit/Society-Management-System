@@ -1,0 +1,27 @@
+@app.route('/receipt/<int:payment_id>')
+def view_receipt(payment_id):
+    query = """
+        SELECT p.id as payment_id, p.amount, p.payment_mode, p.payment_date,
+               m.id as bill_id, m.month_year, m.due_date,
+               f.flat_number, f.block, f.bhk_type,
+               u.full_name as resident_name, r.phone, r.email
+        FROM payments p
+        JOIN maintenance m ON p.maint_id = m.id
+        JOIN flats f ON m.flat_id = f.id
+        JOIN residents r ON p.paid_by = r.id
+        JOIN users u ON r.user_id = u.id
+        WHERE p.id = ?
+    """
+    receipt = query_db(query, (payment_id,), one=True)
+    if not receipt:
+        flash("Receipt record not found.", "danger")
+        return redirect(url_for('login'))
+        
+    receipt_data = (
+        f"{receipt['payment_id']}-{receipt['amount']}-{receipt['payment_date']}"
+    )
+    verification_hash = str(abs(hash(receipt_data)))[:10].upper()
+    
+    return render_template(
+        'receipt.html', receipt=receipt, verification_hash=verification_hash
+    )

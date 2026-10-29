@@ -1,0 +1,37 @@
+import os
+import sqlite3
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, 'database', 'society.db')
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH, detect_types=sqlite3.PARSE_DECLTYPES)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
+
+def query_db(query, args=(), one=False):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(query, args)
+    rv = cur.fetchall()
+    cur.close()
+    conn.close()
+    return (rv[0] if rv else None) if one else rv
+
+def execute_db(query, args=()):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(query, args)
+    conn.commit()
+    last_id = cur.lastrowid
+    cur.close()
+    conn.close()
+    return last_id
+
+def init_db():
+    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    conn = get_db()
+    with open(os.path.join(BASE_DIR, 'database', 'schema.sql'), 'r') as f:
+        conn.executescript(f.read())
+    conn.close()

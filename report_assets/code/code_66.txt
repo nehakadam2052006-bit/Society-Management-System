@@ -1,0 +1,38 @@
+@app.route('/admin/flats')
+@login_required(role='admin')
+def admin_flats():
+    flats = query_db("""
+        SELECT f.*, r.id as resident_id, u.full_name as resident_name, r.phone
+        FROM flats f
+        LEFT JOIN residents r ON f.id = r.flat_id
+        LEFT JOIN users u ON r.user_id = u.id
+        ORDER BY f.block, f.floor, f.flat_number
+    """)
+    return render_template('flats.html', flats=flats)
+
+@app.route('/admin/flats/add', methods=['POST'])
+@login_required(role='admin')
+def add_flat():
+    flat_number = request.form.get('flat_number', '').strip()
+    block = request.form.get('block', '').strip()
+    floor = request.form.get('floor', type=int)
+    bhk_type = request.form.get('bhk_type', '').strip()
+    maint_amount = request.form.get('maint_amount', type=float) or 3000.0
+    
+    existing = query_db(
+        "SELECT id FROM flats WHERE flat_number = ?", (flat_number,), one=True
+    )
+    if existing:
+        flash(
+            f"Error: Flat {flat_number} already exists in directory.",
+            "danger"
+        )
+        return redirect(url_for('admin_flats'))
+        
+    execute_db("""
+        INSERT INTO flats (flat_number, block, floor, bhk_type,
+                           status, maint_amount)
+        VALUES (?, ?, ?, ?, 'vacant', ?)
+    """, (flat_number, block, floor, bhk_type, maint_amount))
+    flash(f"Flat {flat_number} registered successfully.", "success")
+    return redirect(url_for('admin_flats'))

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Reports & Analytics - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Reports & Analytics</h3>
+        <p class="text-muted small mb-0">Generate audit reports, financial summaries, and export records for auditing.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Resident Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 p-4 border-0 shadow-sm text-center">
+            <div class="stat-icon bg-primary-subtle text-primary mx-auto mb-3">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Resident Report</h5>
+            <p class="text-muted small mb-3">Complete list of flat owners, tenants, and contact directory.</p>
+            <a href="{{ url_for('export_csv', report_type='residents') }}" class="btn btn-outline-primary btn-sm mt-auto">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Maintenance Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 p-4 border-0 shadow-sm text-center">
+            <div class="stat-icon bg-success-subtle text-success mx-auto mb-3">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Maintenance Report</h5>
+            <p class="text-muted small mb-3">Detailed breakdown of billing, collected dues, and pending arrears.</p>
+            <a href="{{ url_for('export_csv', report_type='maintenance') }}" class="btn btn-outline-success btn-sm mt-auto">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Complaints Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 p-4 border-0 shadow-sm text-center">
+            <div class="stat-icon bg-warning-subtle text-warning mx-auto mb-3">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Complaints Report</h5>
+            <p class="text-muted small mb-3">Service issues, category breakdown, turnaround time and status.</p>
+            <a href="{{ url_for('export_csv', report_type='complaints') }}" class="btn btn-outline-warning btn-sm mt-auto">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Visitors Report Card -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card h-100 p-4 border-0 shadow-sm text-center">
+            <div class="stat-icon bg-info-subtle text-info mx-auto mb-3">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <h5 class="fw-bold text-dark">Visitor Logs Report</h5>
+            <p class="text-muted small mb-3">Security gate records with entry, exit timestamps and vehicle tags.</p>
+            <a href="{{ url_for('export_csv', report_type='visitors') }}" class="btn btn-outline-info btn-sm mt-auto">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Download CSV
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- On-screen Financial Summary -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <span class="fw-bold text-dark"><i class="bi bi-pie-chart-fill text-primary me-2"></i>Financial & Maintenance Breakdown</span>
+    </div>
+    <div class="card-body">
+        <div class="row g-3 text-center">
+            <div class="col-md-4 p-3 border-end">
+                <span class="text-muted small text-uppercase fw-semibold">Total Revenue Expected</span>
+                <h3 class="fw-bold text-dark my-2">₹{{ "{:,.2f}".format(total_billed) }}</h3>
+                <span class="badge bg-light text-dark border">All Billed Cycles</span>
+            </div>
+            <div class="col-md-4 p-3 border-end">
+                <span class="text-muted small text-uppercase fw-semibold">Total Realized In Bank</span>
+                <h3 class="fw-bold text-success my-2">₹{{ "{:,.2f}".format(total_paid) }}</h3>
+                <span class="badge bg-success-subtle text-success">Collected Collections</span>
+            </div>
+            <div class="col-md-4 p-3">
+                <span class="text-muted small text-uppercase fw-semibold">Arrears Pending Settlement</span>
+                <h3 class="fw-bold text-danger my-2">₹{{ "{:,.2f}".format(total_pending) }}</h3>
+                <span class="badge bg-danger-subtle text-danger">Pending Dues</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

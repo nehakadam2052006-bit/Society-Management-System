@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Notice Board - Society Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold text-dark mb-1">Society Notice Board</h3>
+        <p class="text-muted small mb-0">Official communications, meeting agendas, and society circulars.</p>
+    </div>
+    {% if session.get('role') == 'admin' %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newNoticeModal">
+        <i class="bi bi-megaphone-fill me-1"></i> Post New Notice
+    </button>
+    {% endif %}
+</div>
+
+<div class="row g-4">
+    {% for n in notices %}
+    <div class="col-md-6">
+        <div class="card h-100 shadow-sm border-top border-4 {% if loop.first %}border-primary{% else %}border-secondary{% endif %}">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-light text-dark border">{{ n.category or 'General' }}</span>
+                    <small class="text-muted"><i class="bi bi-calendar-event me-1"></i>{{ n.published_date }}</small>
+                </div>
+                <h5 class="fw-bold text-dark mt-2 mb-3">{{ n.title }}</h5>
+                <p class="text-secondary mb-4" style="line-height: 1.6;">{{ n.description }}</p>
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    <small class="text-muted"><i class="bi bi-person-circle me-1"></i>Posted by Society Secretary</small>
+                    {% if session.get('role') == 'admin' %}
+                    <form method="POST" action="{{ url_for('delete_notice', notice_id=n.id) }}" onsubmit="return confirm('Remove this notice?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="card p-5 text-center text-muted">
+            <i class="bi bi-megaphone display-4 mb-3 text-secondary"></i>
+            <h5>No Active Notices</h5>
+            <p class="small mb-0">There are no notices published on the notice board right now.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if session.get('role') == 'admin' %}
+<!-- Post Notice Modal -->
+<div class="modal fade" id="newNoticeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-megaphone text-primary me-2"></i>Publish Society Notice</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_notice') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Notice Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Annual General Body Meeting" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Category</label>
+                        <select name="category" class="form-select">
+                            <option value="Meeting">Meeting / AGM</option>
+                            <option value="Maintenance">Water / Power Maintenance</option>
+                            <option value="Security">Security & Parking</option>
+                            <option value="Event">Festivals & Celebrations</option>
+                            <option value="General" selected>General Notice</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Notice Content / Description</label>
+                        <textarea name="description" class="form-control" rows="5" placeholder="Provide full details, date, time and venue of the announcement..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Publish to All Residents</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

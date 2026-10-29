@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Housing Society Management Portal{% endblock %}
+
+{% block login_content %}
+<div class="container py-5">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-11 col-sm-9 col-md-7 col-lg-5">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex p-3 bg-primary-subtle text-primary rounded-circle mb-3">
+                    <i class="bi bi-buildings-fill fs-1"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Central Park Housing Society</h3>
+                <p class="text-muted small">Resident Portal & Society Administration System</p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h5 class="fw-bold mb-3 text-dark">Sign In to Your Account</h5>
+                    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" name="username" id="username" class="form-control bg-light border-start-0" placeholder="e.g. admin or resident" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="bi bi-lock text-muted"></i></span>
+                                <input type="password" name="password" id="password" class="form-control bg-light border-start-0" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Secure Login
+                        </button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <!-- Quick Demo Login Switcher -->
+                    <div class="bg-light p-3 rounded border">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-secondary text-uppercase" style="font-size: 0.75rem;">1-Click Demo Accounts</span>
+                            <span class="badge bg-secondary-subtle text-secondary">Quick Fill</span>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary text-start d-flex justify-content-between align-items-center" onclick="fillLogin('admin', 'admin123')">
+                                <span><i class="bi bi-shield-lock-fill me-1"></i> <strong>Admin</strong> (Society Secretary)</span>
+                                <code class="small text-muted">admin / admin123</code>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-success text-start d-flex justify-content-between align-items-center" onclick="fillLogin('resident', 'resident123')">
+                                <span><i class="bi bi-person-fill me-1"></i> <strong>Resident</strong> (Rahul Sharma A-101)</span>
+                                <code class="small text-muted">resident / resident123</code>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-warning text-start d-flex justify-content-between align-items-center" onclick="fillLogin('security', 'security123')">
+                                <span><i class="bi bi-person-badge-fill me-1"></i> <strong>Security</strong> (Main Gate Pass)</span>
+                                <code class="small text-muted">security / security123</code>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-3 text-muted small">
+                Society Management Project &bull; Python Flask &bull; Blackbook Edition
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function fillLogin(user, pass) {
+    document.getElementById('username').value = user;
+    document.getElementById('password').value = pass;
+    document.getElementById('loginForm').submit();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt {{ receipt.payment_id }} - Central Park CHS</title>
+    <link href="static/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f1f5f9; font-family: serif; }
+        .receipt-card { max-width: 650px; margin: 15px auto; background: #fff;
+                        border: 1px solid #cbd5e1; padding: 2rem; }
+        @media print { .no-print { display: none !important; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="receipt-card">
+        <div class="text-center pb-2 border-bottom">
+            <h4 class="fw-bold">CENTRAL PARK CO-OP HOUSING SOCIETY</h4>
+            <p class="small text-muted mb-0">Reg. BOM/HSG/2026/MH | Kalyan</p>
+            <div class="badge bg-primary text-white">RECEIPT</div>
+        </div>
+        <div class="row my-3 small">
+            <div class="col-6">
+                <strong>Receipt:</strong>
+                CPHS-REC-{{ '%05d' % receipt.payment_id }}<br>
+                <strong>Date:</strong> {{ receipt.payment_date }}<br>
+                <strong>Mode:</strong> {{ receipt.payment_mode }}
+            </div>
+            <div class="col-6 text-end">
+                <strong>Flat:</strong>
+                {{ receipt.block }}-{{ receipt.flat_number }}<br>
+                <strong>Resident:</strong> {{ receipt.resident_name }}<br>
+                <strong>Contact:</strong> {{ receipt.phone }}
+            </div>
+        </div>
+        <table class="table table-bordered mb-3 small">
+            <thead class="table-light">
+                <tr><th>Description</th>
+                    <th class="text-end">Amount</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Monthly Maintenance Assessment</td>
+                    <td class="text-end">
+                        {{ '%.2f' % receipt.amount }}</td></tr>
+                <tr class="fw-bold table-light">
+                    <td>TOTAL SETTLED AMOUNT</td>
+                    <td class="text-end text-success">
+                        Rs. {{ '%.2f' % receipt.amount }}</td></tr>
+            </tbody>
+        </table>
+        <div class="row mt-3 text-center small text-muted">
+            <div class="col-6"><p class="mb-0">Resident Signature</p></div>
+            <div class="col-6"><p class="mb-0">
+                Hon. Secretary / Treasurer</p></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

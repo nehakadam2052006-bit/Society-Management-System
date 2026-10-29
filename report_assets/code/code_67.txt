@@ -1,0 +1,45 @@
+@app.route('/admin/residents')
+@login_required(role='admin')
+def admin_residents():
+    residents = query_db("""
+        SELECT r.id, u.full_name, u.username, r.phone, r.email,
+               r.move_in_date, f.flat_number, f.block, f.bhk_type
+        FROM residents r
+        JOIN users u ON r.user_id = u.id
+        JOIN flats f ON r.flat_id = f.id
+        ORDER BY f.flat_number
+    """)
+    vacant_flats = query_db(
+        "SELECT * FROM flats WHERE status = 'vacant' ORDER BY flat_number"
+    )
+    return render_template(
+        'residents.html', residents=residents, vacant_flats=vacant_flats
+    )
+
+@app.route('/admin/residents/add', methods=['POST'])
+@login_required(role='admin')
+def add_resident():
+    full_name = request.form.get('full_name', '').strip()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
+    flat_id = request.form.get('flat_id', type=int)
+    phone = request.form.get('phone', '').strip()
+    email = request.form.get('email', '').strip()
+    move_in_date = (
+        request.form.get('move_in_date') or datetime.now().strftime('%Y-%m-%d')
+    )
+    
+    hashed_pw = generate_password_hash(password, method='pbkdf2:sha256')
+    user_id = execute_db("""
+        INSERT INTO users (username, password, role, full_name)
+        VALUES (?, ?, 'resident', ?)
+    """, (username, hashed_pw, full_name))
+    
+    execute_db("""
+        INSERT INTO residents (user_id, flat_id, phone, email, move_in_date)
+        VALUES (?, ?, ?, ?, ?)
+    """, (user_id, flat_id, phone, email, move_in_date))
+    
+    execute_db("UPDATE flats SET status = 'occupied' WHERE id = ?", (flat_id,))
+    flash(f"Resident {full_name} onboarded and allocated flat.", "success")
+    return redirect(url_for('admin_residents'))

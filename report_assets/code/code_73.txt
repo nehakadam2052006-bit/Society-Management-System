@@ -1,0 +1,40 @@
+@app.route('/admin/vehicles')
+@login_required(role='admin')
+def admin_vehicles():
+    vehicles = query_db("""
+        SELECT v.*, u.full_name as owner_name, f.flat_number, r.phone
+        FROM vehicles v
+        JOIN residents r ON v.resident_id = r.id
+        JOIN users u ON r.user_id = u.id
+        JOIN flats f ON r.flat_id = f.id
+        ORDER BY v.slot_number, f.flat_number
+    """)
+    residents = query_db("""
+        SELECT r.id, u.full_name, f.flat_number
+        FROM residents r
+        JOIN users u ON r.user_id = u.id
+        JOIN flats f ON r.flat_id = f.id
+        ORDER BY f.flat_number
+    """)
+    return render_template(
+        'vehicles.html', vehicles=vehicles, residents=residents
+    )
+
+@app.route('/admin/vehicles/add', methods=['POST'])
+@login_required(role='admin')
+def add_vehicle():
+    resident_id = request.form.get('resident_id', type=int)
+    vehicle_type = request.form.get('vehicle_type', '').strip()
+    vehicle_number = request.form.get('vehicle_number', '').strip().upper()
+    slot_number = request.form.get('slot_number', '').strip().upper()
+    
+    execute_db("""
+        INSERT INTO vehicles (resident_id, vehicle_type,
+                              vehicle_number, slot_number)
+        VALUES (?, ?, ?, ?)
+    """, (resident_id, vehicle_type, vehicle_number, slot_number))
+    flash(
+        f"Vehicle {vehicle_number} registered to slot {slot_number}.",
+        "success"
+    )
+    return redirect(url_for('admin_vehicles'))

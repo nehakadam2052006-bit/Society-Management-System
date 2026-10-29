@@ -1,0 +1,50 @@
+@app.route('/security/dashboard')
+@login_required(role='security')
+def security_dashboard():
+    active_visitors = query_db("""
+        SELECT v.*, f.flat_number, f.block
+        FROM visitors v
+        JOIN flats f ON v.flat_id = f.id
+        WHERE v.check_out IS NULL
+        ORDER BY v.check_in DESC
+    """)
+    recent_visitors = query_db("""
+        SELECT v.*, f.flat_number, f.block
+        FROM visitors v
+        JOIN flats f ON v.flat_id = f.id
+        WHERE v.check_out IS NOT NULL
+        ORDER BY v.check_out DESC LIMIT 10
+    """)
+    flats = query_db(
+        "SELECT id, flat_number, block FROM flats ORDER BY flat_number"
+    )
+    return render_template(
+        'security_dashboard.html',
+        active_visitors=active_visitors,
+        recent_visitors=recent_visitors,
+        flats=flats
+    )
+
+@app.route('/security/visitors/add', methods=['POST'])
+@login_required(role='security')
+def security_add_visitor():
+    visitor_name = request.form.get('visitor_name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    flat_id = request.form.get('flat_id', type=int)
+    purpose = request.form.get('purpose', '').strip()
+    
+    execute_db("""
+        INSERT INTO visitors (visitor_name, phone, flat_id, purpose, check_in)
+        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    """, (visitor_name, phone, flat_id, purpose))
+    flash(f"Visitor {visitor_name} checked in successfully.", "success")
+    return redirect(url_for('security_dashboard'))
+
+@app.route('/security/visitors/exit/<int:visitor_id>', methods=['POST'])
+@login_required(role='security')
+def security_exit_visitor(visitor_id):
+    execute_db("""
+        UPDATE visitors SET check_out = CURRENT_TIMESTAMP WHERE id = ?
+    """, (visitor_id,))
+    flash("Visitor checkout registered.", "info")
+    return redirect(url_for('security_dashboard'))
